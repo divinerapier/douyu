@@ -15,6 +15,7 @@ func main() {
 
 	dy.JoinGroupRequest(0)
 	dy.ShowChatmessage()
+	dy.HeartBeat()
 	wait()
 }
 
