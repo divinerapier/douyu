@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	dy, b := douyu.OpenDanmu(534740)
+	dy, b := douyu.OpenDanmu(462029)
 	fmt.Println(dy)
 	fmt.Println(b)
 	fmt.Println()

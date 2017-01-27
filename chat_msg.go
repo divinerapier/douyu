@@ -8,6 +8,10 @@ import (
 
 	"bytes"
 
+	"io"
+
+	"os"
+
 	log "qiniupkg.com/x/log.v7"
 )
 
@@ -25,8 +29,13 @@ func (dy *Douyu) ShowChatmessage() {
 				var buf [4096]byte
 				cnt, err := dy.Read(buf[:])
 				if err != nil {
-					log.Error("recv chat message err: ", err)
-					continue
+					if err != io.EOF {
+						log.Error("recv chat message err: ", err)
+						continue
+					} else {
+						dy.Close()
+						os.Exit(-1)
+					}
 				}
 				// fmt.Printf("\n%s\n", buf[12:cnt])
 				rawMessageQueue <- buf[12:cnt]
