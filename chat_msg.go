@@ -149,7 +149,7 @@ func (dy *Douyu) parseChatResponse() {
 
 	for {
 		msg := <-dy.chatMsgChan
-		log.Infof("dump chat message: %s\n", msg)
+		log.Infof("dump chat message: %s\n", msg[12:])
 		lines := bytes.Split(msg, []byte("/"))
 		var rid, gid, uid, nn, txt string
 		for _, v := range lines {
@@ -167,7 +167,7 @@ func (dy *Douyu) parseChatResponse() {
 				case "txt":
 					txt = string(kv[1])
 				default:
-					log.Error("unknown key:", string(kv[0]), "value:", string(kv[1]))
+					// log.Error("unknown key:", string(kv[0]), "value:", string(kv[1]))
 				}
 			}
 		}

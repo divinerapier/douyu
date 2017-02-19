@@ -75,20 +75,22 @@ func (dy *Douyu) ReceiveResponse() {
 
 	go dy.parseChatResponse()
 
-	for {
-		var buf [10240]byte
-		cnt, err := dy.Read(buf[:])
-		if err != nil {
-			log.Error("receive response:", err)
-			continue
-		}
+	go func() {
 
-		if bytes.Contains(buf[:cnt], TypeChatmsg) {
-			dy.chatMsgChan <- buf[:cnt]
-		} else if bytes.Contains(buf[:cnt], TypeKeepLive) {
-			dy.keepLiveChan <- buf[:cnt]
-		} else {
-			log.Errorf("unknown type: [%s]\n", buf[:cnt])
+		for {
+			var buf [10240]byte
+			cnt, err := dy.Read(buf[:])
+			if err != nil {
+				log.Error("receive response:", err)
+				continue
+			}
+			if bytes.Contains(buf[:cnt], TypeChatmsg) {
+				dy.chatMsgChan <- buf[:cnt]
+			} else if bytes.Contains(buf[:cnt], TypeKeepLive) {
+				dy.keepLiveChan <- buf[:cnt]
+			} else {
+				// log.Errorf("unknown type: [%s]\n", buf[12:cnt])
+			}
 		}
-	}
+	}()
 }

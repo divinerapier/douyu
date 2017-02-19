@@ -16,17 +16,27 @@ func (dy *Douyu) HeartBeat() {
 			case <-tick:
 				now := time.Now().Unix()
 				resp := dy.heartBeat(now)
-				log.Println("heart beat time:", now, "response:", resp)
+				log.Info("heart beat time:", now, "response:", resp)
 			}
 		}
+
+		// for {
+		// 	now := time.Now().Unix()
+		// 	resp := dy.heartBeat(now)
+		// 	log.Info("heart beat time:", now, "response:", resp)
+		// 	time.Sleep(time.Second * 15)
+		// }
+
 	}()
 }
 
 func (dy *Douyu) heartBeat(now int64) int64 {
 	s := bytes.Join([][]byte{[]byte("type@=keeplive/tick@="), number2bytes(now), []byte{'/'}}, []byte(""))
 	s = PackRequest(s)
+	log.Info("heart beat:", s)
 	dy.Write(s)
 	msg := <-dy.keepLiveChan
+	log.Info("dump keeplive msg:", string(msg[12:]))
 	start := bytes.Index(msg, []byte("tick@="))
 	if start < 0 {
 		return -1
@@ -34,9 +44,11 @@ func (dy *Douyu) heartBeat(now int64) int64 {
 	start += 6
 	end := bytes.IndexByte(msg[start:], '/')
 	if end < 0 {
-		log.Error("keep live msg error: end of tick not found. msg:", string(msg))
+		log.Error("keep live msg error: end of tick not found. msg:", string(msg[12:]))
 	}
 	data := msg[start : start+end]
 
 	return bytes2number(data)
+
+	// return now
 }
