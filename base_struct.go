@@ -2,6 +2,7 @@ package douyu
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"net"
 )
@@ -12,55 +13,82 @@ const (
 	HeaderLength = 8
 )
 
+// Douyu douyu danmu client
 type Douyu struct {
 	net.Conn
-	*DouyuLoginResponse
+	keepLiveChan chan []byte
+	chatMsgChan  chan []byte
+	*LoginResponse
 	RoomID int64
 }
 
-type DouyuMessage struct {
+// Message send to douyu server
+type Message struct {
 	Length uint32
-	Header *DouyuMessageHeader
+	Header *MessageHeader
 	Data   []byte // '\0' 结尾
 }
 
-type DouyuMessageHeader struct {
+// MessageHeader header of douyu message
+type MessageHeader struct {
 	Length        uint32
 	Type          uint16 // 689 cli -> srv      690   srv -> cli
 	EncField      uint8  // 0
 	ReservedField uint8  // 0
 }
 
-type DouyuLoginResponse struct {
-	Type            []byte
-	UserID          int64
-	RoomGroup       int64
-	Pg              int64
-	SessionID       int64
-	Username        []byte
-	Nickname        []byte
-	IsSigned        bool
-	SignedCount     int64
-	LiveStat        bool
-	NeedPhoneVerify bool
-	BestDlev        int64
-	CurLev          int64
-	ErrCode         int64
+// LoginResponse response struct for login request
+type LoginResponse struct {
+	Type            []byte `json:"type,omitempty,string"`
+	UserID          int64  `json:"user_id,omitempty"`
+	RoomGroup       int64  `json:"room_group,omitempty"`
+	Pg              int64  `json:"pg,omitempty"`
+	SessionID       int64  `json:"session_id,omitempty"`
+	Username        []byte `json:"user_name,omitempty,string"`
+	Nickname        []byte `json:"nick_name,omitempty,string"`
+	IsSigned        bool   `json:"is_signed,omitempty"`
+	SignedCount     int64  `json:"signed_count,omitempty"`
+	LiveStat        bool   `json:"live_stat,omitempty"`
+	NeedPhoneVerify bool   `json:"need_phone_verify,omitempty"`
+	BestDlev        int64  `json:"best_delv,omitempty"`
+	CurLev          int64  `json:"cur_lev,omitempty"`
+	ErrCode         int64  `json:"err_code,omitempty"`
+	IsIllegal       bool   `json:"is_illegal,omitempty"`
+	IllCt           int64  `json:"ill_ct,omitempty"`
+	IllTs           int64  `json:"ill_ts,omitempty"`
+	Now             int64  `json:"now,omitempty"`
+	Ps              int64  `json:"ps,omitempty"`
+	Es              int64  `json:"es,omitempty"`
+	It              int64  `json:"it,omitempty"`
+	Its             int64  `json:"its,omitempty"`
+	Nrc             int64  `json:"nrc,omitempty"`
+	Ih              int64  `json:"ih,omitempty"`
+	SID             int64  `json:"sid,omitempty"`
 }
 
 func PackRequest(data []byte) []byte {
-	var dm DouyuMessage
+	var dm Message
 	dm.Data = data
 	dm.Data = append(dm.Data, byte(0))
 	dm.Length = HeaderLength + 1 + uint32(len(data))
-	dm.Header = &DouyuMessageHeader{
+	dm.Header = &MessageHeader{
 		Length: dm.Length,
 		Type:   689,
 	}
 	return dm.Marshal()
 }
 
-func (dm *DouyuMessage) Marshal() []byte {
+func (dy *Douyu) String() string {
+	var s = `{"local":%s, "remote":"%s", "room_id":%d, "info":%s}`
+	return fmt.Sprintf(s, dy.LocalAddr(), dy.RemoteAddr(), dy.RoomID, dy.LoginResponse)
+}
+
+func (lr *LoginResponse) String() string {
+	data, _ := json.Marshal(lr)
+	return string(data)
+}
+
+func (dm *Message) Marshal() []byte {
 	buf := make([]byte, dm.Length+Offset)
 	binary.LittleEndian.PutUint32(buf[:4], dm.Length)
 	binary.LittleEndian.PutUint32(buf[4:8], dm.Header.Length)
@@ -69,22 +97,12 @@ func (dm *DouyuMessage) Marshal() []byte {
 	return buf
 }
 
-func (dy *Douyu) String() string {
-	var s = `{"local":%s, "remote":%s, "room_id":%d, "info":%s}`
-	return fmt.Sprintf(s, dy.LocalAddr(), dy.RemoteAddr(), dy.RoomID, dy.DouyuLoginResponse)
-}
-
-func (lr *DouyuLoginResponse) String() string {
-	s := `{"type":%s,"user_id":%d,"room_group":%d,"pg":%d,"session_id":%d,"username":%s,"nickname":%s,"is_signed":%v,"signed_count":%d,"live_stat":%v,"need_phone_verify":%v,"best_dlev":%d,"cur_lev":%d}`
-	return fmt.Sprintf(s, lr.Type, lr.UserID, lr.RoomGroup, lr.Pg, lr.SessionID, lr.Username, lr.Nickname, lr.IsSigned, lr.SignedCount, lr.LiveStat, lr.NeedPhoneVerify, lr.BestDlev, lr.CurLev)
-}
-
-func (dym *DouyuMessage) String() string {
-	s := `{"length":%d,"header":%s,"data":%s}`
+func (dym *Message) String() string {
+	s := `{"length":%d,"header":%s,"data":"%s"}`
 	return fmt.Sprintf(s, dym.Length, dym.Header, dym.Data)
 }
 
-func (dymh *DouyuMessageHeader) String() string {
+func (dymh *MessageHeader) String() string {
 	s := `{"length":%d,"type":%d,"enc_field":%d,"reserved_field":%d}`
 	return fmt.Sprintf(s, dymh.Length, dymh.Type, dymh.EncField, dymh.ReservedField)
 }

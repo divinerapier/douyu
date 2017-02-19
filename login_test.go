@@ -48,7 +48,7 @@ func Test_parseLoginResponse(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *DouyuLoginResponse
+		want *LoginResponse
 	}{
 		// TODO: Add test cases.
 		{
@@ -57,7 +57,7 @@ func Test_parseLoginResponse(t *testing.T) {
 				data: []byte("type@=loginres/userid@=123450/roomgroup@=123450/pg@=123450/sessionid@=123450/username@=hello/nickname@=world/is_signined@=1/signin_count@=123450/live_stat@=1/npv@=1/best_dlev@=123450/cur_lev@=123450/"),
 			},
 
-			want: &DouyuLoginResponse{
+			want: &LoginResponse{
 				Type:            []byte("loginres"),
 				Username:        []byte("hello"),
 				Nickname:        []byte("world"),

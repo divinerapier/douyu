@@ -6,15 +6,20 @@ import (
 	"github.com/DivineRapier/douyu"
 )
 
+// ZSMJ 52876
+
 func main() {
-	dy, b := douyu.OpenDanmu(462029)
+	dy, err := douyu.OpenDanmu(52876)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	fmt.Println(dy)
-	fmt.Println(b)
 	fmt.Println()
 	fmt.Println()
 
 	dy.JoinGroupRequest(0)
-	dy.ShowChatmessage()
+	dy.ReceiveResponse()
 	dy.HeartBeat()
 	wait()
 }

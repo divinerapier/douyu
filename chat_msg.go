@@ -46,39 +46,68 @@ func (dy *Douyu) ShowChatmessage() {
 }
 
 func processChatmessage(input <-chan []byte) <-chan *DouyuChatMessage {
-	chatType := []byte("type@=chatmsg")
-	nn := []byte("/nn@=")
-	txt := []byte("/txt@=")
+
 	output := make(chan *DouyuChatMessage, 1024)
-	go func(chan *DouyuChatMessage) {
+	go func() {
+
 		for {
 			select {
 			case msg := <-input:
-				if !bytes.Contains(msg, chatType) {
+
+				chatMsg := decodeChatMessage(msg)
+				if chatMsg == nil {
 					continue
 				}
-				chatMsg := AcquireChatmessage()
-				chatMsg.Time = time.Now()
-				if begin := bytes.Index(msg, nn); begin < 0 {
-					ReleaseChatmessage(chatMsg)
-					continue
-				} else {
-					end := bytes.IndexByte(msg[begin+len(nn):], '/')
-					chatMsg.Username = msg[begin+len(nn) : begin+len(nn)+end]
-				}
-				if begin := bytes.Index(msg, txt); begin < 0 {
-					ReleaseChatmessage(chatMsg)
-					continue
-				} else {
-					end := bytes.IndexByte(msg[begin+len(txt):], '/')
-					chatMsg.Message = msg[begin+len(txt) : begin+len(txt)+end]
-				}
+
 				output <- chatMsg
 			}
 		}
 
-	}(output)
+	}()
 	return output
+}
+
+func decodeChatMessage(msg []byte) *DouyuChatMessage {
+	if len(msg) == 0 {
+		return nil
+	}
+
+	chatType := []byte("type@=chatmsg")
+	heartBeatType := []byte("type@=keeplive")
+
+	if bytes.Contains(msg, heartBeatType) {
+		fmt.Println(string(msg))
+		return nil
+	}
+
+	nn := []byte("/nn@=")
+	txt := []byte("/txt@=")
+	nickNameBegin, nickNameEnd, txtBegin, txtEnd := 0, 0, 0, 0
+
+	chatMsg := AcquireChatmessage()
+	chatMsg.Time = time.Now()
+	if !bytes.Contains(msg, chatType) {
+		return nil
+	}
+	chatMsg.Time = time.Now()
+	if nickNameBegin = bytes.Index(msg, nn); nickNameBegin < 0 {
+		ReleaseChatmessage(chatMsg)
+		return nil
+	} else {
+		nickNameBegin += len(nn)
+		nickNameEnd = nickNameBegin + bytes.IndexByte(msg[nickNameBegin:], '/')
+		chatMsg.Username = msg[nickNameBegin:nickNameEnd]
+	}
+	if txtBegin = bytes.Index(msg, txt); txtBegin < 0 {
+		ReleaseChatmessage(chatMsg)
+		return nil
+	} else {
+		txtBegin += len(txt)
+		txtEnd = txtBegin + bytes.IndexByte(msg[txtBegin:], '/')
+		chatMsg.Message = msg[txtBegin:txtEnd]
+	}
+
+	return nil
 }
 
 type DouyuChatMessage struct {
@@ -114,4 +143,32 @@ func ReleaseChatmessage(a *DouyuChatMessage) {
 func ResetChatmessage(a *DouyuChatMessage) {
 	a.Message = a.Message[:0]
 	a.Username = a.Username[:0]
+}
+
+func (dy *Douyu) parseChatResponse() {
+
+	for {
+		msg := <-dy.chatMsgChan
+		log.Infof("dump chat message: %s\n", msg)
+		lines := bytes.Split(msg, []byte("/"))
+		var rid, gid, uid, nn, txt string
+		for _, v := range lines {
+			kv := bytes.Split(v, []byte("@="))
+			switch string(kv[0]) {
+			case "rid":
+				rid = string(kv[1])
+			case "gid":
+				gid = string(kv[1])
+			case "uid":
+				uid = string(kv[1])
+			case "nn":
+				nn = string(kv[1])
+			case "txt":
+				txt = string(kv[1])
+			default:
+				log.Error("unknown key:", string(kv[0]), "value:", string(kv[1]))
+			}
+		}
+		fmt.Printf("%s\t%s\t%s\t%s\t%s\n", rid, gid, uid, nn, txt)
+	}
 }
