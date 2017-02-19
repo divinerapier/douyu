@@ -2,7 +2,6 @@ package douyu
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"os"
 
@@ -27,7 +26,7 @@ func (dy *Douyu) PrintResponse() {
 		for {
 			select {
 			case m := <-responseMsg:
-				fmt.Println(m)
+				log.Println(m)
 				ReleaseChatmessage(m)
 			default:
 				var buf [4096]byte
@@ -84,12 +83,12 @@ func (dy *Douyu) ReceiveResponse() {
 			continue
 		}
 
-		if bytes.Contains(buf[:cnt], TypeLoginRes) {
+		if bytes.Contains(buf[:cnt], TypeChatmsg) {
 			dy.chatMsgChan <- buf[:cnt]
 		} else if bytes.Contains(buf[:cnt], TypeKeepLive) {
 			dy.keepLiveChan <- buf[:cnt]
 		} else {
-			// log.Errorf("unknown type: [%s]\n", buf[:cnt])
+			log.Errorf("unknown type: [%s]\n", buf[:cnt])
 		}
 	}
 }

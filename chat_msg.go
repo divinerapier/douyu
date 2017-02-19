@@ -23,7 +23,7 @@ func (dy *Douyu) ShowChatmessage() {
 		for {
 			select {
 			case m := <-chatmsg:
-				fmt.Println(m)
+				log.Println(m)
 				ReleaseChatmessage(m)
 			default:
 				var buf [4096]byte
@@ -76,7 +76,7 @@ func decodeChatMessage(msg []byte) *DouyuChatMessage {
 	heartBeatType := []byte("type@=keeplive")
 
 	if bytes.Contains(msg, heartBeatType) {
-		fmt.Println(string(msg))
+		log.Println(string(msg))
 		return nil
 	}
 
@@ -154,19 +154,21 @@ func (dy *Douyu) parseChatResponse() {
 		var rid, gid, uid, nn, txt string
 		for _, v := range lines {
 			kv := bytes.Split(v, []byte("@="))
-			switch string(kv[0]) {
-			case "rid":
-				rid = string(kv[1])
-			case "gid":
-				gid = string(kv[1])
-			case "uid":
-				uid = string(kv[1])
-			case "nn":
-				nn = string(kv[1])
-			case "txt":
-				txt = string(kv[1])
-			default:
-				log.Error("unknown key:", string(kv[0]), "value:", string(kv[1]))
+			if len(kv) > 1 {
+				switch string(kv[0]) {
+				case "rid":
+					rid = string(kv[1])
+				case "gid":
+					gid = string(kv[1])
+				case "uid":
+					uid = string(kv[1])
+				case "nn":
+					nn = string(kv[1])
+				case "txt":
+					txt = string(kv[1])
+				default:
+					log.Error("unknown key:", string(kv[0]), "value:", string(kv[1]))
+				}
 			}
 		}
 		fmt.Printf("%s\t%s\t%s\t%s\t%s\n", rid, gid, uid, nn, txt)

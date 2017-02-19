@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	log "qiniupkg.com/x/log.v7"
+
 	"github.com/DivineRapier/douyu"
 )
 
@@ -11,7 +13,7 @@ import (
 func main() {
 	dy, err := douyu.OpenDanmu(52876)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		return
 	}
 	fmt.Println(dy)
