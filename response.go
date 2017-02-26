@@ -82,6 +82,10 @@ func (dy *Douyu) ReceiveResponse() {
 			cnt, err := dy.Read(buf[:])
 			if err != nil {
 				log.Error("receive response:", err)
+				if err == io.EOF {
+					log.Fatal("read eof from remote. exit -1")
+					return
+				}
 				continue
 			}
 			if bytes.Contains(buf[:cnt], TypeChatmsg) {

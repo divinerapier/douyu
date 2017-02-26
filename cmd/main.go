@@ -9,9 +9,10 @@ import (
 )
 
 // ZSMJ 52876
+// 天使焦 97376
 
 func main() {
-	dy, err := douyu.OpenDanmu(52876)
+	dy, err := douyu.OpenDanmu(97376)
 	if err != nil {
 		log.Error(err)
 		return

@@ -9,7 +9,7 @@ import (
 
 // HeartBeat 心跳消息 每 45 s
 func (dy *Douyu) HeartBeat() {
-	tick := time.Tick(time.Second * 15)
+	tick := time.Tick(time.Second * 45)
 	go func() {
 		for {
 			select {
