@@ -145,25 +145,50 @@ func ResetChatmessage(a *DouyuChatMessage) {
 	a.Username = a.Username[:0]
 }
 
+var (
+	singleSpace    = " "
+	doubleSpace    = "  "
+	tripleSpace    = "   "
+	fourTimeSpace  = "    "
+	fiveTimeSpace  = "     "
+	sixTimeSpace   = "      "
+	sevenTimeSpace = "       "
+	eightTimeSpace = "        "
+	nineTimeSpace  = "         "
+	tenTimeSpace   = "          "
+	twentyTenSpace = tenTimeSpace + tenTimeSpace
+	spaceList      = []string{
+		singleSpace, doubleSpace, tripleSpace, fourTimeSpace, fiveTimeSpace, sixTimeSpace, sevenTimeSpace, eightTimeSpace, nineTimeSpace, tenTimeSpace,
+		tenTimeSpace + singleSpace, tenTimeSpace + doubleSpace, tenTimeSpace + tripleSpace, tenTimeSpace + fourTimeSpace, tenTimeSpace + fiveTimeSpace,
+		tenTimeSpace + sixTimeSpace, tenTimeSpace + sevenTimeSpace, tenTimeSpace + eightTimeSpace, tenTimeSpace + nineTimeSpace, tenTimeSpace + tenTimeSpace,
+		twentyTenSpace + singleSpace, twentyTenSpace + doubleSpace, twentyTenSpace + tripleSpace, twentyTenSpace + fourTimeSpace, twentyTenSpace + fiveTimeSpace,
+		twentyTenSpace + sixTimeSpace, twentyTenSpace + sevenTimeSpace, twentyTenSpace + eightTimeSpace, twentyTenSpace + nineTimeSpace, twentyTenSpace + tenTimeSpace,
+	}
+	tab = "\t"
+)
+
 func (dy *Douyu) parseChatResponse() {
 
 	for {
 		msg := <-dy.chatMsgChan
-		log.Infof("dump chat message: %s\n", msg[12:])
+		// log.Infof("dump chat message: %s\n", msg[12:])
 		lines := bytes.Split(msg, []byte("/"))
-		var rid, gid, uid, nn, txt string
+		var rid, uid, nn, txt string
 		for _, v := range lines {
 			kv := bytes.Split(v, []byte("@="))
 			if len(kv) > 1 {
 				switch string(kv[0]) {
 				case "rid":
-					rid = string(kv[1])
+					rid = string(kv[1]) + "\t"
 				case "gid":
-					gid = string(kv[1])
+					// gid = string(kv[1])
 				case "uid":
-					uid = string(kv[1])
+					uid = string(kv[1]) + spaceList[(12-len(kv[1]))] + tab
 				case "nn":
-					nn = string(kv[1])
+					byteLen := len(kv[1])
+					runeLen := len([]rune(string(kv[1])))
+					// fmt.Println("byteLen =", byteLen, "runeLen =", runeLen)
+					nn = string(kv[1]) + spaceList[30-(byteLen+runeLen)/2] + tab
 				case "txt":
 					txt = string(kv[1])
 				default:
@@ -171,6 +196,6 @@ func (dy *Douyu) parseChatResponse() {
 				}
 			}
 		}
-		fmt.Printf("%s\t%s\t%s\t%s\t%s\n", rid, gid, uid, nn, txt)
+		fmt.Printf("%s%s%s%s\n", rid, uid, nn, txt)
 	}
 }

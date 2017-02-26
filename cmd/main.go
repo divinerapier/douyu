@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 
 	log "qiniupkg.com/x/log.v7"
@@ -12,7 +13,12 @@ import (
 // 天使焦 97376
 
 func main() {
-	dy, err := douyu.OpenDanmu(97376)
+
+	room := flag.Int64("room", 52876, "room_id")
+
+	flag.Parse()
+
+	dy, err := douyu.OpenDanmu(*room)
 	if err != nil {
 		log.Error(err)
 		return
