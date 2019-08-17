@@ -15,16 +15,16 @@ func TestOpenDanmu(t *testing.T) {
 		wantDy  *Douyu
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
-		gotDy, err := OpenDanmu(tt.args.rid)
+		gotDy, err := DialDanmu(tt.args.rid)
 		if (err != nil) != tt.wantErr {
-			t.Errorf("%q. OpenDanmu() error = %v, wantErr %v", tt.name, err, tt.wantErr)
+			t.Errorf("%q. DialDanmu() error = %v, wantErr %v", tt.name, err, tt.wantErr)
 			continue
 		}
 		if !reflect.DeepEqual(gotDy, tt.wantDy) {
-			t.Errorf("%q. OpenDanmu() = %v, want %v", tt.name, gotDy, tt.wantDy)
+			t.Errorf("%q. DialDanmu() = %v, want %v", tt.name, gotDy, tt.wantDy)
 		}
 	}
 }
@@ -34,7 +34,7 @@ func TestDouyu_login(t *testing.T) {
 		name string
 		dy   *Douyu
 	}{
-	// TODO: Add test cases.
+		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		tt.dy.login()

@@ -15,7 +15,7 @@ func (dy *Douyu) JoinGroupRequest(groupID int64) {
 func joinGroupRequest(dy *Douyu, groupID int64) {
 	data := bytes.Join([][]byte{[]byte("type@=joingroup/rid@="), number2bytes(dy.RoomID), []byte("/gid@=-9999/")}, []byte(""))
 
-	data = PackRequest(data)
+	data = PackPacket(data)
 	if _, err := dy.Write(data); err != nil {
 		log.Error("join_group_request send data err: ", err)
 		return

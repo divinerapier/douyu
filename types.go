@@ -22,15 +22,15 @@ type Douyu struct {
 	RoomID int64
 }
 
-// Message send to douyu server
-type Message struct {
+// Packet send to douyu server
+type Packet struct {
 	Length uint32
-	Header *MessageHeader
+	Header *PacketHeader
 	Data   []byte // '\0' 结尾
 }
 
-// MessageHeader header of douyu message
-type MessageHeader struct {
+// PacketHeader header of douyu message
+type PacketHeader struct {
 	Length        uint32
 	Type          uint16 // 689 cli -> srv      690   srv -> cli
 	EncField      uint8  // 0
@@ -66,12 +66,12 @@ type LoginResponse struct {
 	SID             int64  `json:"sid,omitempty"`
 }
 
-func PackRequest(data []byte) []byte {
-	var dm Message
+func PackPacket(data []byte) []byte {
+	var dm Packet
 	dm.Data = data
 	dm.Data = append(dm.Data, byte(0))
 	dm.Length = HeaderLength + 1 + uint32(len(data))
-	dm.Header = &MessageHeader{
+	dm.Header = &PacketHeader{
 		Length: dm.Length,
 		Type:   689,
 	}
@@ -88,21 +88,21 @@ func (lr *LoginResponse) String() string {
 	return string(data)
 }
 
-func (dm *Message) Marshal() []byte {
-	buf := make([]byte, dm.Length+Offset)
-	binary.LittleEndian.PutUint32(buf[:4], dm.Length)
-	binary.LittleEndian.PutUint32(buf[4:8], dm.Header.Length)
-	binary.LittleEndian.PutUint16(buf[8:10], dm.Header.Type)
-	copy(buf[12:], dm.Data[0:])
+func (m *Packet) Marshal() []byte {
+	buf := make([]byte, m.Length+Offset)
+	binary.LittleEndian.PutUint32(buf[:4], m.Length)
+	binary.LittleEndian.PutUint32(buf[4:8], m.Header.Length)
+	binary.LittleEndian.PutUint16(buf[8:10], m.Header.Type)
+	copy(buf[12:], m.Data[0:])
 	return buf
 }
 
-func (dym *Message) String() string {
+func (m *Packet) String() string {
 	s := `{"length":%d,"header":%s,"data":"%s"}`
-	return fmt.Sprintf(s, dym.Length, dym.Header, dym.Data)
+	return fmt.Sprintf(s, m.Length, m.Header, m.Data)
 }
 
-func (dymh *MessageHeader) String() string {
+func (dymh *PacketHeader) String() string {
 	s := `{"length":%d,"type":%d,"enc_field":%d,"reserved_field":%d}`
 	return fmt.Sprintf(s, dymh.Length, dymh.Type, dymh.EncField, dymh.ReservedField)
 }

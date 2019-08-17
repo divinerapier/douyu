@@ -6,7 +6,7 @@ import (
 
 	log "qiniupkg.com/x/log.v7"
 
-	"github.com/DivineRapier/douyu"
+	"github.com/divinerapier/douyu"
 )
 
 // ZSMJ 52876
@@ -18,7 +18,7 @@ func main() {
 
 	flag.Parse()
 
-	dy, err := douyu.OpenDanmu(*room)
+	dy, err := douyu.DialDanmu(*room)
 	if err != nil {
 		log.Error(err)
 		return

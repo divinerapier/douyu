@@ -1,20 +1,12 @@
 package douyu
 
 import (
-	"bytes"
+	"encoding/binary"
+	"fmt"
 	"io"
 	"os"
 
 	log "qiniupkg.com/x/log.v7"
-)
-
-var (
-	// TypeLoginRes 登陆响应类型
-	TypeLoginRes = []byte("type@=loginres")
-	// TypeKeepLive 心跳响应类型
-	TypeKeepLive = []byte("type@=keeplive")
-	// TypeChatmsg 弹幕消息
-	TypeChatmsg = []byte("type@=chatmsg")
 )
 
 func (dy *Douyu) PrintResponse() {
@@ -78,8 +70,7 @@ func (dy *Douyu) ReceiveResponse() {
 	go func() {
 
 		for {
-			var buf [10240]byte
-			cnt, err := dy.Read(buf[:])
+			message, err := dy.readMeaage()
 			if err != nil {
 				log.Error("receive response:", err)
 				if err == io.EOF {
@@ -88,13 +79,36 @@ func (dy *Douyu) ReceiveResponse() {
 				}
 				continue
 			}
-			if bytes.Contains(buf[:cnt], TypeChatmsg) {
-				dy.chatMsgChan <- buf[:cnt]
-			} else if bytes.Contains(buf[:cnt], TypeKeepLive) {
-				dy.keepLiveChan <- buf[:cnt]
+			if message.IsChatMessage() {
+
+			} else if message.UnknownType() {
+				fmt.Fprintf(os.Stderr, "UNKNOWN MESSAGE TYPE. '%s'", message)
 			} else {
-				// log.Errorf("unknown type: [%s]\n", buf[12:cnt])
+				// do nothing
 			}
 		}
 	}()
+}
+
+func (dy *Douyu) readMeaage() (Message, error) {
+	var header [12]byte
+	// read header
+	_, err := io.ReadFull(dy, header[:])
+	if err != nil {
+		panic(err)
+	}
+	length := binary.LittleEndian.Uint32(header[:4])
+	length2 := binary.LittleEndian.Uint32(header[4:8])
+	messageType := binary.LittleEndian.Uint32(header[8:10])
+	if length != length2 || length <= 0 || messageType != 690 {
+		panic(fmt.Errorf("corrupted header received. len: %d, len2: %d, message type: %d",
+			length, length2, messageType))
+	}
+	// read body
+	body := make([]byte, length-8)
+	_, err = io.ReadFull(dy, body)
+	if err != nil {
+		panic(err)
+	}
+	return Message(body), nil
 }

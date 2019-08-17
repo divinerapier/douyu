@@ -12,16 +12,15 @@ import (
 // DouyuDanmuServer 斗鱼弹幕服务器地址
 const DouyuDanmuServer = "openbarrage.douyutv.com:8601"
 
-// OpenDanmu 打开斗鱼弹幕
-func OpenDanmu(rid int64) (dy *Douyu, err error) {
+// DialDanmu 打开斗鱼弹幕
+func DialDanmu(rid int64) (dy *Douyu, err error) {
 	dy = new(Douyu)
 	dy.RoomID = rid
 	dailer := &net.Dialer{
 		Timeout: time.Second * 10,
 	}
 	if dy.Conn, err = dailer.Dial("tcp", DouyuDanmuServer); err != nil {
-		dy = nil
-		return
+		panic(err)
 	}
 	dy.login()
 	dy.keepLiveChan = make(chan []byte, 100)
@@ -33,7 +32,7 @@ func (dy *Douyu) login() error {
 	var resp [1024]byte
 	reqData := append([]byte("type@=loginreq/roomid@="), number2bytes(dy.RoomID)...)
 	reqData = append(reqData, '/')
-	reqData = PackRequest(reqData)
+	reqData = PackPacket(reqData)
 	dy.Write(reqData)
 	cnt, err := dy.Read(resp[:])
 	if err != nil {

@@ -32,7 +32,7 @@ func (dy *Douyu) HeartBeat() {
 
 func (dy *Douyu) heartBeat(now int64) int64 {
 	s := bytes.Join([][]byte{[]byte("type@=keeplive/tick@="), number2bytes(now), []byte{'/'}}, []byte(""))
-	s = PackRequest(s)
+	s = PackPacket(s)
 	log.Info("heart beat:", s)
 	dy.Write(s)
 	msg := <-dy.keepLiveChan
